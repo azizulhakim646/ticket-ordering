@@ -1,0 +1,6 @@
+body { font-family: Arial; background: #f4f4f4; margin: 20px; }
+h2 { color: #333; }
+nav a { margin-right: 20px; }
+.form-container { width: 300px; padding: 20px; background: white; margin: auto; }
+input { width: 100%; padding: 10px; margin: 8px 0; }
+button { padding: 10px; width: 100%; background: blue; color: white; border: none; }
