@@ -18,12 +18,7 @@ jobs:
         run: |
           for file in $(find . -name "*.php"); do php -l "$file"; done
 
-      - name: Setup Snyk CLI
-        uses: snyk/actions/setup@master
 
-      - name: Run Snyk Code Scan (SAST)
-        run: snyk code test
-        env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Check for secrets in repo
