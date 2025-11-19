@@ -31,7 +31,8 @@ jobs:
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -exec php -l {} \;
-            - name: Install Composer Dependencies
+          
+      - name: Install Composer Dependencies
         run: composer install
 
       - name: Install PHPStan & Security Audit
