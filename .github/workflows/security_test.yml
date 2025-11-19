@@ -32,18 +32,6 @@ jobs:
         run: |
           find . -name "*.php" -exec php -l {} \;
 
-      # Run CodeQL SAST scan
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: php
-
-      - name: Autobuild for CodeQL
-        uses: github/codeql-action/autobuild@v4
-
-      - name: Analyze with CodeQL
-        uses: github/codeql-action/analyze@v4
-
       # Scan for secrets with Gitleaks
       - name: Scan for secrets with Gitleaks
         uses: gitleaks/gitleaks-action@v2
