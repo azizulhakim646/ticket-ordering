@@ -31,7 +31,20 @@ jobs:
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -exec php -l {} \;
+            - name: Install Composer Dependencies
+        run: composer install
 
+      - name: Install PHPStan & Security Audit
+        run: |
+          composer global require phpstan/phpstan
+          composer global require phpcs-security-audit/security-audit
+
+      - name: Run PHPStan (Static Analysis)
+        run: ~/.composer/vendor/bin/phpstan analyse .
+
+      - name: Run Security Audit (phpcs-security-audit)
+        run: ~/.composer/vendor/bin/phpcs --standard=Security .
+        
       # Scan for secrets with Gitleaks
       - name: Scan for secrets with Gitleaks
         uses: gitleaks/gitleaks-action@v2
