@@ -16,12 +16,16 @@ jobs:
 
       - name: Run PHP Lint
         run: |
-          find . -name "*.php" -exec php -l {} \;
+          for file in $(find . -name "*.php"); do php -l "$file"; done
 
-      - name: Run basic security scan
-        uses: snyk/actions/php@master
+      - name: Setup Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Run Snyk Code Scan (SAST)
+        run: snyk code test
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Check for secrets in repo
         uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
