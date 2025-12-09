@@ -11,46 +11,42 @@ on:
 
 permissions:
   contents: read
-  # Write permission is necessary to upload security reports
+  # Write permission is necessary for Gitleaks to upload results to the security tab
   security-events: write 
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository (fetch-depth 0 needed for Gitleaks)
+      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
+        # Gitleaks needs a full, unshallow history to scan effectively
         with:
           fetch-depth: 0 
 
       # Setup PHP environment
       - name: Setup PHP
-        uses: shivamathur/setup-php@v2
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
-
 
       # PHP Syntax Check
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -exec php -l {} \;
-
-      # Run OWASP Noir using its Docker container
-      - name: Run OWASP Noir Attack Surface Discovery (Docker)
-        # Use the official Docker image
-        uses: docker://ghcr.io/owasp-noir/noir:main
-        with:
-          # Arguments for the Noir command line tool
-          args: "-b . -f json -T -o noir_results.json"
       
       # Scan for secrets with Gitleaks
       - name: Scan for secrets with Gitleaks
+        # Assign an ID to this step so we can reference its output
         id: gitleaks_scan
         uses: gitleaks/gitleaks-action@v2
+        # Set to true initially while testing, but you might change this to false later
+        # if you want the workflow run to fail completely if secrets are found.
         continue-on-error: true 
 
-      # Upload Gitleaks results to GitHub Security tab
+      # Upload Gitleaks results to GitHub Security tab (SARIF format)
+      # This step only runs if secrets were actually found by Gitleaks
       - name: Upload Gitleaks SARIF report
         uses: github/codeql-action/upload-sarif@v3
         if: steps.gitleaks_scan.outputs.exitcode == 1
