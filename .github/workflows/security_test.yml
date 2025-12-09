@@ -11,43 +11,49 @@ on:
 
 permissions:
   contents: read
-  # Write permission is necessary for Gitleaks to upload results to the security tab
+  # Write permission is necessary to upload security reports
   security-events: write 
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
+      # Checkout the repository (fetch-depth 0 needed for Gitleaks)
       - name: Checkout code
         uses: actions/checkout@v4
-        # Gitleaks needs a full, unshallow history to scan effectively
         with:
           fetch-depth: 0 
 
-      # Setup PHP environment
+      # Setup PHP environment (for your project's existing dependencies)
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivamathur/setup-php@v2
         with:
           php-version: '8.1'
-
 
       # PHP Syntax Check
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -exec php -l {} \;
-      
+
+      # Run OWASP Noir to detect endpoints
+      - name: Run OWASP Noir Attack Surface Discovery
+        # Noir runs as a command within the runner environment
+        run: |
+          # Install OWASP Noir (assuming it's not pre-installed on the runner)
+          # Check OWASP Noir documentation for the exact installation steps if this fails.
+          curl -sS raw.githubusercontent.com | sh
+          
+          # Run Noir and output results to a JSON file
+          # The base URL (-u) should point to where your application is deployed/running
+          ./noir -b . -f json -T -o noir_results.json
+
       # Scan for secrets with Gitleaks
       - name: Scan for secrets with Gitleaks
-        # Assign an ID to this step so we can reference its output
         id: gitleaks_scan
         uses: gitleaks/gitleaks-action@v2
-        # Set to true initially while testing, but you might change this to false later
-        # if you want the workflow run to fail completely if secrets are found.
         continue-on-error: true 
 
-      # Upload Gitleaks results to GitHub Security tab (SARIF format)
-      # This step only runs if secrets were actually found by Gitleaks
+      # Upload Gitleaks results to GitHub Security tab
       - name: Upload Gitleaks SARIF report
         uses: github/codeql-action/upload-sarif@v3
         if: steps.gitleaks_scan.outputs.exitcode == 1
