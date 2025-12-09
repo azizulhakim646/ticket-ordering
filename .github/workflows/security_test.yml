@@ -31,9 +31,6 @@ jobs:
         with:
           php-version: '8.1'
 
-      # Install Composer dependencies (ensures checks run in a complete environment)
-      - name: Install Dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
 
       # PHP Syntax Check
       - name: PHP Syntax Check
