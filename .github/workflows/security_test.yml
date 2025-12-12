@@ -53,3 +53,30 @@ jobs:
         with:
           sarif_file: results.sarif
           wait-for-processing: true
+      # Scan for secrets with Gitleaks
+      - name: Scan for secrets with Gitleaks
+        id: gitleaks_scan
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+
+      # Run OWASP Noir
+      - name: Run OWASP Noir
+        id: noir_scan
+        run: |
+          curl -sSL https://github.com/owasp-noir/noir/releases/latest/download/noir-linux-amd64 -o noir
+          chmod +x noir
+          ./noir -b . -P -f json > noir-report.json || true
+
+      - name: Upload Noir Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: noir-report
+          path: noir-report.json
+
+      # Upload Gitleaks SARIF report
+      - name: Upload Gitleaks SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        if: steps.gitleaks_scan.outputs.exitcode == 1
+        with:
+          sarif_file: results.sarif
+          wait-for-processing: true
