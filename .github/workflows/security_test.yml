@@ -1,4 +1,4 @@
-name: "security_test"
+name: security_test
 
 on:
   push:
@@ -11,21 +11,20 @@ on:
 
 permissions:
   contents: read
-  # Write permission is necessary for Gitleaks to upload results to the security tab
-  security-events: write 
+  security-events: write
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+
     steps:
-      # Checkout the repository
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
-        # Gitleaks needs a full, unshallow history to scan effectively
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
-      # Setup PHP environment
+      # Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -35,21 +34,27 @@ jobs:
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -exec php -l {} \;
-      
+
+      # Run Snyk to check PHP vulnerabilities
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/php@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+
       # Scan for secrets with Gitleaks
       - name: Scan for secrets with Gitleaks
-        # Assign an ID to this step so we can reference its output
         id: gitleaks_scan
         uses: gitleaks/gitleaks-action@v2
-        # Set to true initially while testing, but you might change this to false later
-        # if you want the workflow run to fail completely if secrets are found.
-        continue-on-error: true 
-
-      # Upload Gitleaks results to GitHub Security tab (SARIF format)
-      # This step only runs if secrets were actually found by Gitleaks
-      - name: Upload Gitleaks SARIF report
-        uses: github/codeql-action/upload-sarif@v3
-        if: steps.gitleaks_scan.outputs.exitcode == 1
+        continue-on-error: true
         with:
-          sarif_file: results.sarif
+          format: sarif
+          output: gitleaks.sarif
+
+      # Upload Gitleaks results to GitHub Security tab
+      - name: Upload Gitleaks SARIF report
+        if: steps.gitleaks_scan.outputs.exitcode == '1'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
           wait-for-processing: true
